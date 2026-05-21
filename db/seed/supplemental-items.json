@@ -1,0 +1,23 @@
+{
+  "note": "Activos con sticker físico que no aparecen en RELACION DE ACTIVOS Oct 2025",
+  "items": [
+    {
+      "barcode": "202330041390000010921",
+      "clave": "2023 3004 139 000001 0921",
+      "resguardo": null,
+      "description": "COMPUTADORA EN OFICINA",
+      "brand": "DELL",
+      "model": null,
+      "serial": "S/N",
+      "status": "active",
+      "invoice_number": null,
+      "invoice_date": "2012-06-18",
+      "depreciated_cost": null,
+      "responsible_person": "COORDINACION DE BIBLIOTECAS",
+      "location": "Oficina 1",
+      "expected_quantity": 1,
+      "found_quantity": 0,
+      "is_group": false
+    }
+  ]
+}

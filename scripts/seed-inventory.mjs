@@ -44,6 +44,15 @@ function sslConfig(connectionString) {
 const seed = JSON.parse(
   readFileSync(join(root, "db/seed/inventory-uach-2025.json"), "utf8")
 );
+let supplemental = { items: [] };
+try {
+  supplemental = JSON.parse(
+    readFileSync(join(root, "db/seed/supplemental-items.json"), "utf8")
+  );
+} catch {
+  /* optional */
+}
+const allItems = [...seed.items, ...(supplemental.items ?? [])];
 const sessionId = seed.defaultSessionId;
 
 const client = new pg.Client({
@@ -61,7 +70,7 @@ console.log(`[BiblioScan] Inventario actual: ${existing} ítems`);
 
 let imported = 0;
 let failed = 0;
-for (const item of seed.items) {
+for (const item of allItems) {
   try {
   await client.query(
     `INSERT INTO inventory_items (
