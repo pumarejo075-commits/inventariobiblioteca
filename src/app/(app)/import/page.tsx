@@ -61,11 +61,13 @@ export default function ImportPage() {
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
           className={`flex min-h-[200px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed p-8 transition-colors ${
-            dragOver ? "border-emerald-400 bg-emerald-500/10" : "border-slate-700 bg-slate-900"
+            dragOver
+              ? "border-[var(--success)] bg-[var(--success-bg)]"
+              : "border-[var(--border)] bg-white"
           }`}
         >
-          <Upload className="h-12 w-12 text-emerald-500" />
-          <p className="text-center font-semibold text-slate-300">
+          <Upload className="h-12 w-12 text-[var(--success)]" />
+          <p className="text-center font-semibold text-[var(--foreground)]">
             Arrastra el archivo Excel maestro aquí
           </p>
           <label>
@@ -84,7 +86,7 @@ export default function ImportPage() {
         {preview && (
           <Card className="space-y-4">
             <div className="flex items-center gap-3">
-              <FileSpreadsheet className="h-8 w-8 text-emerald-400" />
+              <FileSpreadsheet className="h-8 w-8 text-[var(--success)]" />
               <div>
                 <CardTitle>{file?.name}</CardTitle>
                 <CardDescription>{preview.rows.length} filas válidas</CardDescription>
@@ -92,18 +94,18 @@ export default function ImportPage() {
             </div>
 
             {preview.duplicates.length > 0 && (
-              <div className="flex gap-2 rounded-xl bg-amber-500/10 p-3 text-sm text-amber-400">
+              <div className="flex gap-2 rounded-xl bg-[var(--warning-bg)] p-3 text-sm text-[var(--warning)]">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
                 {preview.duplicates.length} claves duplicadas en archivo
               </div>
             )}
 
             {preview.errors.length > 0 && (
-              <p className="text-sm text-red-400">{preview.errors.length} errores de validación</p>
+              <p className="text-sm text-[var(--danger)]">{preview.errors.length} errores de validación</p>
             )}
 
-            <div className="max-h-40 overflow-auto rounded-xl bg-slate-950 p-3 text-xs text-slate-400">
-              <p className="mb-2 font-bold text-slate-300">Mapeo de columnas:</p>
+            <div className="max-h-40 overflow-auto rounded-xl bg-[var(--surface)] p-3 text-xs text-[var(--foreground-muted)]">
+              <p className="mb-2 font-bold text-[var(--foreground)]">Mapeo de columnas:</p>
               {Object.entries(preview.mapping).map(([h, f]) => (
                 <p key={h}>
                   {h} → {f ?? "—"}
@@ -111,10 +113,10 @@ export default function ImportPage() {
               ))}
             </div>
 
-            <div className="rounded-xl bg-slate-950 p-3">
-              <p className="mb-2 text-xs font-bold uppercase text-slate-500">Vista previa</p>
+            <div className="rounded-xl bg-[var(--surface)] p-3">
+              <p className="mb-2 text-xs font-bold uppercase text-[var(--foreground-muted)]">Vista previa</p>
               {preview.rows.slice(0, 3).map((r) => (
-                <p key={r._rowIndex} className="text-sm text-slate-300">
+                <p key={r._rowIndex} className="text-sm text-[var(--foreground)]">
                   {r.clave} — {r.descCorta} (×{r.cantidadExiste})
                 </p>
               ))}
@@ -129,7 +131,7 @@ export default function ImportPage() {
         {!preview && (
           <Card>
             <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+              <CheckCircle2 className="h-5 w-5 text-[var(--success)]" />
               Columnas soportadas
             </CardTitle>
             <CardDescription className="mt-2 leading-relaxed">

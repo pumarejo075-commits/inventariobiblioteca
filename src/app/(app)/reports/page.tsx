@@ -27,7 +27,6 @@ export default function ReportsPage() {
   const stats = {
     total: rows.length,
     missing: rows.filter((r) => r.missing_quantity > 0).length,
-    complete: rows.filter((r) => r.missing_quantity === 0 && r.found_quantity > 0).length,
     percent:
       rows.length > 0
         ? (rows.reduce((s, r) => s + r.found_quantity, 0) /
@@ -40,18 +39,18 @@ export default function ReportsPage() {
     <>
       <AppHeader title="Reportes" />
       <main className="mx-auto max-w-lg space-y-4 px-4 py-4">
-        <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-900 p-4 text-center">
+        <div className="grid grid-cols-3 gap-2 rounded-2xl border border-[var(--border)] bg-white p-4 text-center shadow-sm">
           <div>
-            <p className="text-2xl font-black text-slate-100">{stats.total}</p>
-            <p className="text-[10px] uppercase text-slate-500">Ítems</p>
+            <p className="text-2xl font-black text-[var(--foreground)]">{stats.total}</p>
+            <p className="text-[10px] uppercase text-[var(--foreground-muted)]">Ítems</p>
           </div>
           <div>
-            <p className="text-2xl font-black text-amber-400">{stats.missing}</p>
-            <p className="text-[10px] uppercase text-slate-500">Faltantes</p>
+            <p className="text-2xl font-black text-[var(--danger)]">{stats.missing}</p>
+            <p className="text-[10px] uppercase text-[var(--foreground-muted)]">Faltantes</p>
           </div>
           <div>
-            <p className="text-2xl font-black text-emerald-400">{stats.percent.toFixed(0)}%</p>
-            <p className="text-[10px] uppercase text-slate-500">Avance</p>
+            <p className="text-2xl font-black text-[var(--success)]">{stats.percent.toFixed(0)}%</p>
+            <p className="text-[10px] uppercase text-[var(--foreground-muted)]">Avance</p>
           </div>
         </div>
 
@@ -62,7 +61,9 @@ export default function ReportsPage() {
               type="button"
               onClick={() => setTab(t)}
               className={`flex-1 rounded-xl py-3 text-xs font-bold uppercase ${
-                tab === t ? "bg-emerald-500 text-slate-950" : "bg-slate-900 text-slate-400"
+                tab === t
+                  ? "bg-[var(--success)] text-white"
+                  : "border border-[var(--border)] bg-white text-[var(--foreground-muted)]"
               }`}
             >
               {t === "missing" ? "Faltantes" : t === "found" ? "Encontrados" : "Todos"}
@@ -89,11 +90,14 @@ export default function ReportsPage() {
           {rows.slice(0, 30).map((r) => (
             <li
               key={r.id ?? r.barcode}
-              className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3"
+              className="rounded-xl border border-[var(--border)] bg-white px-4 py-3 shadow-sm"
             >
-              <p className="font-semibold text-slate-100">{r.description}</p>
-              <p className="text-xs text-slate-500">
-                Esp {r.expected_quantity} · Enc {r.found_quantity} · Falta {r.missing_quantity}
+              <p className="font-semibold text-[var(--foreground)]">{r.description}</p>
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Esp {r.expected_quantity} · Enc {r.found_quantity} ·{" "}
+                <span className={r.missing_quantity > 0 ? "font-bold text-[var(--danger)]" : ""}>
+                  Falta {r.missing_quantity}
+                </span>
               </p>
             </li>
           ))}

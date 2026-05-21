@@ -50,9 +50,9 @@ export default function HomePage() {
       <AppHeader title="Reconciliación" />
       <main className="mx-auto max-w-lg space-y-4 px-4 py-4">
         {!activeSession && (
-          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
-            <p className="font-bold text-amber-400">Sin sesión activa</p>
-            <p className="mt-1 text-sm text-slate-400">
+          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--warning-bg)] p-4">
+            <p className="font-bold text-[var(--warning)]">Sin sesión activa</p>
+            <p className="mt-1 text-sm text-[var(--foreground-muted)]">
               Inicia una sesión de inventario para escanear activos.
             </p>
             <Button asChild className="mt-3 w-full" size="lg">
@@ -95,8 +95,8 @@ export default function HomePage() {
               onClick={() => setFilter(f)}
               className={`flex-1 rounded-xl py-3 text-sm font-bold uppercase ${
                 filter === f
-                  ? "bg-emerald-500 text-slate-950"
-                  : "bg-slate-900 text-slate-400"
+                  ? "bg-[var(--success)] text-white"
+                  : "border border-[var(--border)] bg-white text-[var(--foreground-muted)]"
               }`}
             >
               {f === "all" ? "Todos" : "Faltantes"}
@@ -105,12 +105,12 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <p className="py-8 text-center text-slate-500">Cargando...</p>
+          <p className="py-8 text-center text-[var(--foreground-muted)]">Cargando...</p>
         ) : topMissing.length === 0 ? (
-          <p className="py-8 text-center text-emerald-400">Sin faltantes detectados</p>
+          <p className="py-8 text-center text-[var(--success)]">Sin faltantes detectados</p>
         ) : (
           <section className="space-y-3">
-            <div className="flex items-center gap-2 text-amber-400">
+            <div className="flex items-center gap-2 text-[var(--danger)]">
               <AlertTriangle className="h-5 w-5" />
               <h2 className="font-bold uppercase tracking-wide">Prioridad — faltantes</h2>
             </div>

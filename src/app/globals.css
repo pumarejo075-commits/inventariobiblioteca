@@ -1,17 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020617;
-  --foreground: #f1f5f9;
-  --accent: #10b981;
-  --card: #0f172a;
-  --border: #1e293b;
+  --surface: #f9f8f6;
+  --surface-elevated: #efe9e3;
+  --surface-muted: #d9cfc7;
+  --accent-warm: #c9b59c;
+  --foreground: #3d3834;
+  --foreground-muted: #6b6560;
+  --border: #d9cfc7;
+  --card: #ffffff;
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --success-border: #86efac;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --danger-border: #fca5a5;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --info: #2563eb;
+  --info-bg: #dbeafe;
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-background: var(--surface);
   --color-foreground: var(--foreground);
-  --color-accent: var(--accent);
+  --color-accent: var(--success);
   --color-card: var(--card);
   --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
@@ -22,18 +35,17 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
+  background: var(--surface);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   overscroll-behavior: none;
   min-height: 100dvh;
 }
 
-/* PWA standalone */
 @media (display-mode: standalone) {
   body {
     padding-top: env(safe-area-inset-top);
@@ -44,13 +56,13 @@ input,
 button,
 select,
 textarea {
-  font-size: 16px; /* prevent iOS zoom */
+  font-size: 16px;
 }
 
 ::-webkit-scrollbar {
   width: 4px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--surface-muted);
   border-radius: 4px;
 }

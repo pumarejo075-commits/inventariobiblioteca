@@ -46,9 +46,9 @@ export default function AssetsPage() {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
-        <p className="text-xs text-slate-500">{rows.length} activos</p>
+        <p className="text-xs text-[var(--foreground-muted)]">{rows.length} activos</p>
         {loading ? (
-          <p className="text-center text-slate-500">Cargando...</p>
+          <p className="text-center text-[var(--foreground-muted)]">Cargando...</p>
         ) : (
           rows.map((r) => (
             <ReconciliationCard

@@ -37,23 +37,27 @@ export function ReconciliationCard({
       onClick={onClick}
       className={cn(
         "w-full rounded-2xl border p-4 text-left transition-colors active:scale-[0.99]",
-        highlight ? "border-emerald-500/50 bg-emerald-500/10" : "border-slate-800 bg-slate-900",
-        onClick && "cursor-pointer hover:border-slate-600"
+        highlight
+          ? "border-[var(--success-border)] bg-[var(--success-bg)]"
+          : "border-[var(--border)] bg-white shadow-sm",
+        onClick && "cursor-pointer hover:border-[var(--accent-warm)]"
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className={cn("font-bold text-slate-100", compact ? "text-sm" : "text-base")}>
+          <p className={cn("font-bold text-[var(--foreground)]", compact ? "text-sm" : "text-base")}>
             {title}
           </p>
-          {subtitle && <p className="truncate text-xs text-slate-500">{subtitle}</p>}
+          {subtitle && (
+            <p className="truncate text-xs text-[var(--foreground-muted)]">{subtitle}</p>
+          )}
         </div>
         <span
           className={cn(
             "shrink-0 rounded-lg px-2 py-1 text-xs font-bold",
-            status === "complete" && "bg-emerald-500/20 text-emerald-400",
-            status === "missing" && "bg-amber-500/20 text-amber-400",
-            status === "excess" && "bg-blue-500/20 text-blue-400"
+            status === "complete" && "bg-[var(--success-bg)] text-[var(--success)]",
+            status === "missing" && "bg-[var(--danger-bg)] text-[var(--danger)]",
+            status === "excess" && "bg-[var(--info-bg)] text-[var(--info)]"
           )}
         >
           {percent.toFixed(0)}%
@@ -62,15 +66,17 @@ export function ReconciliationCard({
 
       <div className={cn("mt-3 grid grid-cols-3 gap-2", compact && "mt-2")}>
         <Stat label="Esperado" value={expected} />
-        <Stat label="Encontrado" value={found} accent="emerald" />
-        <Stat label="Faltante" value={missing} accent={missing > 0 ? "amber" : undefined} />
+        <Stat label="Encontrado" value={found} accent="success" />
+        <Stat label="Faltante" value={missing} accent={missing > 0 ? "danger" : undefined} />
       </div>
       {excess > 0 && (
-        <p className="mt-2 text-xs font-medium text-blue-400">Excedente: {formatNumber(excess)}</p>
+        <p className="mt-2 text-xs font-medium text-[var(--info)]">
+          Excedente: {formatNumber(excess)}
+        </p>
       )}
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
         <div
-          className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+          className="h-full rounded-full bg-[var(--success)] transition-all duration-300"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -85,17 +91,19 @@ function Stat({
 }: {
   label: string;
   value: number;
-  accent?: "emerald" | "amber";
+  accent?: "success" | "danger";
 }) {
   return (
-    <div className="rounded-xl bg-slate-950/60 px-2 py-2 text-center">
-      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">{label}</p>
+    <div className="rounded-xl bg-[var(--surface)] px-2 py-2 text-center">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--foreground-muted)]">
+        {label}
+      </p>
       <p
         className={cn(
           "text-xl font-black tabular-nums",
-          accent === "emerald" && "text-emerald-400",
-          accent === "amber" && "text-amber-400",
-          !accent && "text-slate-200"
+          accent === "success" && "text-[var(--success)]",
+          accent === "danger" && "text-[var(--danger)]",
+          !accent && "text-[var(--foreground)]"
         )}
       >
         {formatNumber(value)}
@@ -116,20 +124,21 @@ export function ReconciliationSummary({
   const percent = expected > 0 ? (found / expected) * 100 : 0;
   return (
     <div className="grid grid-cols-3 gap-3">
-      <div className="rounded-2xl bg-slate-900 p-4 text-center">
-        <p className="text-xs uppercase text-slate-500">Esperado</p>
-        <p className="text-3xl font-black text-slate-100">{formatNumber(expected)}</p>
+      <div className="rounded-2xl border border-[var(--border)] bg-white p-4 text-center shadow-sm">
+        <p className="text-xs uppercase text-[var(--foreground-muted)]">Esperado</p>
+        <p className="text-3xl font-black text-[var(--foreground)]">{formatNumber(expected)}</p>
       </div>
-      <div className="rounded-2xl bg-emerald-500/10 p-4 text-center ring-1 ring-emerald-500/30">
-        <p className="text-xs uppercase text-emerald-600">Encontrado</p>
-        <p className="text-3xl font-black text-emerald-400">{formatNumber(found)}</p>
+      <div className="rounded-2xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-center">
+        <p className="text-xs uppercase text-[var(--success)]">Encontrado</p>
+        <p className="text-3xl font-black text-[var(--success)]">{formatNumber(found)}</p>
       </div>
-      <div className="rounded-2xl bg-amber-500/10 p-4 text-center ring-1 ring-amber-500/30">
-        <p className="text-xs uppercase text-amber-600">Faltante</p>
-        <p className="text-3xl font-black text-amber-400">{formatNumber(missing)}</p>
+      <div className="rounded-2xl border border-[var(--danger-border)] bg-[var(--danger-bg)] p-4 text-center">
+        <p className="text-xs uppercase text-[var(--danger)]">Faltante</p>
+        <p className="text-3xl font-black text-[var(--danger)]">{formatNumber(missing)}</p>
       </div>
-      <p className="col-span-3 text-center text-sm text-slate-400">
-        Reconciliación global: <span className="font-bold text-emerald-400">{percent.toFixed(1)}%</span>
+      <p className="col-span-3 text-center text-sm text-[var(--foreground-muted)]">
+        Reconciliación global:{" "}
+        <span className="font-bold text-[var(--success)]">{percent.toFixed(1)}%</span>
       </p>
     </div>
   );

@@ -20,6 +20,27 @@ function normalizeBarcodeKey(value) {
   return String(value).replace(/\s+/g, "").toUpperCase();
 }
 
+function parseExcelDateValue(value) {
+  if (value == null || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const ms = Math.round((value - 25569) * 86400 * 1000);
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  }
+  const raw = String(value).trim();
+  if (!raw) return null;
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+  const m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  const n = Number(raw);
+  if (Number.isFinite(n) && n > 1000) {
+    const ms = Math.round((n - 25569) * 86400 * 1000);
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  }
+  return null;
+}
+
 const EXCEL_COLUMN_MAP = {
   clave: ["clave", "codigo", "código", "barcode"],
   resguardo: ["resguardo"],
@@ -95,7 +116,7 @@ for (let i = 1; i < raw.length; i++) {
     serial: row[headerIndex.serie ?? -1]?.toString() ?? null,
     status: statusRaw === "B" ? "inactive" : "active",
     invoice_number: row[headerIndex.Factura ?? -1]?.toString() ?? null,
-    invoice_date: row[headerIndex.FechaFactura ?? -1]?.toString() ?? null,
+    invoice_date: parseExcelDateValue(row[headerIndex.FechaFactura ?? -1]),
     depreciated_cost: Number(row[headerIndex.CostoDepreciado ?? -1]) || null,
     responsible_person: row[headerIndex.Responsable ?? -1]?.toString() ?? null,
     location: row[headerIndex["Ubicación"] ?? -1]?.toString() ?? null,

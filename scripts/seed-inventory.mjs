@@ -60,7 +60,9 @@ const existing = countRows[0]?.n ?? 0;
 console.log(`[BiblioScan] Inventario actual: ${existing} ítems`);
 
 let imported = 0;
+let failed = 0;
 for (const item of seed.items) {
+  try {
   await client.query(
     `INSERT INTO inventory_items (
       barcode, clave, resguardo, description, brand, model, serial, status,
@@ -100,6 +102,10 @@ for (const item of seed.items) {
     ]
   );
   imported++;
+  } catch (e) {
+    failed++;
+    console.error(`  ✗ ${item.barcode}: ${e instanceof Error ? e.message : e}`);
+  }
 }
 
 const link = await client.query(
@@ -116,6 +122,10 @@ const { rows: finalRows } = await client.query(
 );
 
 await client.end();
+if (failed > 0) {
+  console.error(`[BiblioScan] Seed: ${failed} filas con error`);
+  process.exit(1);
+}
 console.log(
   `[BiblioScan] Seed inventario: ${imported} upserts, ${link.rowCount} vínculos sesión nuevos, total ${finalRows[0].n} ítems`
 );

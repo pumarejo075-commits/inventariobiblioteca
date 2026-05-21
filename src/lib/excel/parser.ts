@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import { EXCEL_COLUMN_MAP, type ExcelField } from "@/types/database";
+import { parseExcelDateValue } from "@/lib/excel/date";
 import { normalizeBarcodeKey } from "@/lib/utils";
 
 export interface ParsedExcelRow {
@@ -122,7 +123,7 @@ export function parseExcelFile(
       serie: cellValue(row, headerIndex.serie ?? -1)?.toString(),
       status: cellValue(row, headerIndex.status ?? -1)?.toString(),
       Factura: cellValue(row, headerIndex.Factura ?? -1)?.toString(),
-      FechaFactura: cellValue(row, headerIndex.FechaFactura ?? -1)?.toString(),
+      FechaFactura: parseExcelDateValue(cellValue(row, headerIndex.FechaFactura ?? -1)) ?? undefined,
       CostoDepreciado: Number(cellValue(row, headerIndex.CostoDepreciado ?? -1)) || undefined,
       Responsable: cellValue(row, headerIndex.Responsable ?? -1)?.toString(),
       Ubicación: cellValue(row, headerIndex.Ubicación ?? -1)?.toString(),
@@ -144,7 +145,7 @@ export function rowsToInventoryPayload(rows: ParsedExcelRow[]) {
     serial: r.serie ?? null,
     status: r.status === "B" ? "inactive" : "active",
     invoice_number: r.Factura ?? null,
-    invoice_date: r.FechaFactura ?? null,
+    invoice_date: parseExcelDateValue(r.FechaFactura) ?? null,
     depreciated_cost: r.CostoDepreciado ?? null,
     responsible_person: r.Responsable ?? null,
     location: r.Ubicación ?? null,

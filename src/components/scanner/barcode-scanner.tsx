@@ -371,7 +371,7 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
 
       {manualOpen && (
         <div className="absolute inset-0 z-30 flex items-end bg-black/70 p-4">
-          <div className="w-full space-y-3 rounded-2xl bg-slate-900 p-4">
+          <div className="w-full space-y-3 rounded-2xl bg-white p-4 text-[var(--foreground)]">
             <p className="font-bold text-white">Código manual</p>
             <Input
               value={manualCode}

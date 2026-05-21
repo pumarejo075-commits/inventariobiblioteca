@@ -77,11 +77,11 @@ export default function ScannerPage() {
 
   if (!activeSession) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-slate-950 p-6 text-center">
-        <p className="text-xl font-bold text-slate-100">Sesión requerida</p>
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[var(--surface)] p-6 text-center">
+        <p className="text-xl font-bold text-[var(--foreground)]">Sesión requerida</p>
         <button
           type="button"
-          className="rounded-xl bg-emerald-500 px-8 py-4 font-bold text-slate-950"
+          className="rounded-xl bg-[var(--success)] px-8 py-4 font-bold text-white"
           onClick={() => router.push("/sessions")}
         >
           Ir a sesiones

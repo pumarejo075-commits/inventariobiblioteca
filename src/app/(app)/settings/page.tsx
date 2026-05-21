@@ -57,9 +57,9 @@ export default function SettingsPage() {
         <Card className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {online ? (
-              <Wifi className="h-6 w-6 text-emerald-400" />
+              <Wifi className="h-6 w-6 text-[var(--success)]" />
             ) : (
-              <WifiOff className="h-6 w-6 text-amber-400" />
+              <WifiOff className="h-6 w-6 text-[var(--warning)]" />
             )}
             <div>
               <CardTitle className="text-base">

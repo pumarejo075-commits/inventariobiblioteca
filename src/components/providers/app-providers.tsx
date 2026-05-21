@@ -30,10 +30,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       {children}
       <Toaster
         position="top-center"
-        theme="dark"
+        theme="light"
         toastOptions={{
           classNames: {
-            toast: "bg-slate-900 border-slate-700 text-slate-100",
+            toast: "bg-white border-[var(--border)] text-[var(--foreground)] shadow-md",
           },
         }}
       />
