@@ -68,6 +68,16 @@ const existing = countRows[0]?.n ?? 0;
 
 console.log(`[BiblioScan] Inventario actual: ${existing} ítems`);
 
+await client.query(
+  `INSERT INTO inventory_sessions (id, name, description, status, started_at)
+   VALUES ($1, 'Inventario Biblioteca', 'Inventario patrimonial UACH', 'active', NOW())
+   ON CONFLICT (id) DO UPDATE SET
+     status = 'active',
+     closed_at = NULL,
+     updated_at = NOW()`,
+  [sessionId]
+);
+
 let imported = 0;
 let failed = 0;
 for (const item of allItems) {

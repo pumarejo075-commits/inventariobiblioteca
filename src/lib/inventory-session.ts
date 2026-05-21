@@ -21,9 +21,11 @@ export async function resolveActiveInventorySession(): Promise<InventorySession>
     const res = await fetch("/api/sessions");
     if (!res.ok) return DEFAULT_INVENTORY_SESSION;
     const sessions: InventorySession[] = await res.json();
-    const preferred = sessions.find((s) => s.id === DEFAULT_INVENTORY_SESSION_ID);
-    const active = sessions.find((s) => s.status === "active");
-    return preferred ?? active ?? sessions[0] ?? DEFAULT_INVENTORY_SESSION;
+    const preferredActive = sessions.find(
+      (s) => s.id === DEFAULT_INVENTORY_SESSION_ID && s.status === "active"
+    );
+    const anyActive = sessions.find((s) => s.status === "active");
+    return preferredActive ?? anyActive ?? DEFAULT_INVENTORY_SESSION;
   } catch {
     return DEFAULT_INVENTORY_SESSION;
   }
