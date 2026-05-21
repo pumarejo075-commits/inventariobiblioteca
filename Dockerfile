@@ -4,15 +4,19 @@ RUN apk add --no-cache libc6-compat wget
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json package-lock.json ./
-RUN npm ci --omit=optional
+COPY package.json package-lock.json .npmrc ./
+# npm install en lugar de npm ci — lockfile con optional wasm32 falla en builders Linux
+RUN npm install --omit=optional --no-audit --no-fund --legacy-peer-deps
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
-ENV JWT_SECRET=build-time-jwt-secret-minimum-32-chars
+# Placeholders solo para compilar; Railway inyecta los reales en runtime
+ARG DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
+ARG JWT_SECRET=build-time-jwt-secret-minimum-32-chars-long
+ENV DATABASE_URL=$DATABASE_URL
+ENV JWT_SECRET=$JWT_SECRET
 RUN npm run build
 
 FROM base AS runner
