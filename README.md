@@ -75,12 +75,17 @@ src/app/api/       → REST API
 
 ## Railway
 
-1. Añade un servicio **PostgreSQL** en Railway.
-2. Variables en la app:
-   - `DATABASE_URL` (desde el plugin Postgres)
-   - `JWT_SECRET`
-   - `DATABASE_SSL=true` (si aplica)
-3. Deploy con `Dockerfile` — healthcheck: `/api/health`
+1. Crea proyecto desde GitHub → [inventariobiblioteca](https://github.com/pumarejo075-commits/inventariobiblioteca).
+2. Añade plugin **PostgreSQL** y enlaza `DATABASE_URL` al servicio web.
+3. Variables obligatorias en el servicio **BiblioScan**:
+   - `DATABASE_URL` — referencia al Postgres de Railway
+   - `JWT_SECRET` — cadena aleatoria de 32+ caracteres
+   - `DATABASE_SSL=true` — recomendado en producción
+4. Tras el primer deploy, ejecuta migraciones (local con la URL de Railway):
+   ```bash
+   DATABASE_URL="postgresql://..." npm run db:migrate
+   ```
+5. Healthcheck: `GET /api/health`
 
 ## Modo demo (sin Postgres)
 

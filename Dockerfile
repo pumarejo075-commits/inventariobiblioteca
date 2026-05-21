@@ -1,16 +1,20 @@
 # BiblioScan — Production Docker image for Railway
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat
+FROM node:22-alpine AS base
+RUN apk add --no-cache libc6-compat wget
 WORKDIR /app
 
 FROM base AS deps
 COPY package.json package-lock.json ./
-RUN npm ci
+# Omit optional deps (wasm32, etc.) — evita lockfile desync en Linux builders
+RUN npm ci --omit=optional
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Variables dummy solo para compilar Next.js (runtime usa Railway env)
+ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
+ENV JWT_SECRET=build-time-jwt-secret-minimum-32-chars
 RUN npm run build
 
 FROM base AS runner
@@ -28,7 +32,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
 
 CMD ["node", "server.js"]
