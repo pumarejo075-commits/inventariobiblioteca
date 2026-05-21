@@ -22,7 +22,7 @@ interface BarcodeScannerProps {
   disabled?: boolean;
 }
 
-type OverlayState = ScanResult | "not_found" | null;
+type OverlayState = ScanResult | "not_found" | "excess" | null;
 
 const OVERLAY_MS = 2000;
 
@@ -40,10 +40,15 @@ const OVERLAY_CONFIG: Record<
     label: "PAQUETE",
     sub: "Grupo reconciliado automáticamente",
   },
+  excess: {
+    bg: "bg-amber-500",
+    label: "EXCEDENTE",
+    sub: "Cantidad por encima del esperado",
+  },
   duplicate: {
     bg: "bg-amber-500",
     label: "DUPLICADO",
-    sub: "Ya escaneado en esta sesión",
+    sub: "Paquete ya escaneado",
   },
   not_found: {
     bg: "bg-red-600",
@@ -92,19 +97,35 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
   const detectorRef = useRef<BarcodeDetector | null>(null);
 
   const showFeedback = useCallback((result: ScanProcessResult, barcode: string) => {
-    const state = (result.result ?? "not_found") as OverlayState;
+    const baseResult = result.result ?? "not_found";
+    const hasExcess =
+      (baseResult === "found" || baseResult === "group_reconciled") &&
+      (result.item?.excess_quantity ?? 0) > 0;
+    const state = (hasExcess ? "excess" : baseResult) as OverlayState;
     setProcessing(false);
     setOverlay(state);
     setOverlayBarcode(barcode);
-    setOverlayDetail(
-      result.item
-        ? `${result.item.description}\n${result.item.clave ?? barcode}\nEsp: ${result.item.expected_quantity} · Enc: ${result.item.found_quantity}`
-        : result.message ?? ""
-    );
+    if (result.item) {
+      const exc =
+        result.item.excess_quantity > 0
+          ? ` · Exc: ${result.item.excess_quantity}`
+          : "";
+      const detail = `${result.item.description}\n${result.item.clave ?? barcode}\nEsp: ${result.item.expected_quantity} · Enc: ${result.item.found_quantity}${exc}`;
+      setOverlayDetail(
+        hasExcess
+          ? `Excedente: ${result.item.excess_quantity}\n${detail}`
+          : detail
+      );
+    } else {
+      setOverlayDetail(result.message ?? "");
+    }
 
     if (state === "found" || state === "group_reconciled") {
       playBeep(880);
       vibrate(30);
+    } else if (state === "excess") {
+      playBeep(660, 0.15);
+      vibrate([30, 20, 30]);
     } else if (state === "duplicate") {
       playBeep(440, 0.12);
       vibrate([50, 30, 50]);

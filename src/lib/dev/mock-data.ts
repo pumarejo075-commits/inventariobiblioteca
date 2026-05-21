@@ -67,8 +67,6 @@ export const MOCK_ITEMS: ReconciliationRow[] = [
   },
 ];
 
-const scanned = new Set<string>();
-
 export function isDevMode() {
   return (
     process.env.BIBLIOSCAN_DEV_MODE === "true" ||
@@ -89,28 +87,9 @@ export function mockProcessScan(barcode: string): ScanProcessResult {
     return { result: "not_found", message: "Activo no registrado (demo)" };
   }
 
-  if (scanned.has(item.id)) {
-    return {
-      result: "duplicate",
-      message: "Ya escaneado en esta sesión",
-      item: {
-        id: item.id,
-        barcode: item.barcode,
-        clave: item.clave,
-        description: item.description,
-        brand: item.brand,
-        model: item.model,
-        expected_quantity: item.expected_quantity,
-        found_quantity: item.found_quantity,
-        missing_quantity: item.missing_quantity,
-        excess_quantity: item.excess_quantity,
-      },
-    };
-  }
-
-  scanned.add(item.id);
-  item.found_quantity = Math.min(item.found_quantity + 1, item.expected_quantity);
+  item.found_quantity += 1;
   item.missing_quantity = Math.max(item.expected_quantity - item.found_quantity, 0);
+  item.excess_quantity = Math.max(item.found_quantity - item.expected_quantity, 0);
   item.reconciliation_percent =
     item.expected_quantity > 0
       ? Math.round((item.found_quantity / item.expected_quantity) * 10000) / 100
