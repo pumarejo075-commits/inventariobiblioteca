@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BiblioScan
 
-## Getting Started
+Plataforma institucional de inventario y reconciliación patrimonial con **PostgreSQL** y escaneo móvil continuo.
 
-First, run the development server:
+## Stack
+
+- Next.js 15 · TypeScript · Tailwind · shadcn/ui
+- **PostgreSQL** (`pg`) · JWT + cookies · bcrypt
+- ZXing · PWA (Serwist) · Railway / Docker
+
+## Inicio rápido (local)
+
+### 1. Base de datos
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run db:up          # Docker: Postgres en localhost:5432
+npm run db:migrate     # Aplica db/migrations/*.sql + seed
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+O en un solo paso: `npm run db:setup`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env.local
+```
 
-## Learn More
+```env
+DATABASE_URL=postgresql://biblioscan:biblioscan@localhost:5432/biblioscan
+JWT_SECRET=tu-secreto-largo-minimo-32-chars
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. App
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Abre **http://localhost:3000**
 
-## Deploy on Vercel
+**Usuarios demo** (tras migración):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Email | Contraseña | Rol |
+|-------|------------|-----|
+| admin@biblioscan.local | admin123 | admin |
+| operador@biblioscan.local | admin123 | operator |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4. Importar Excel institucional
+
+```bash
+npm run seed:excel
+```
+
+## Arquitectura
+
+```
+db/migrations/     → Esquema PostgreSQL + función process_scan()
+src/lib/db/        → Pool + queries
+src/lib/auth/      → JWT, sesión, bcrypt
+src/app/api/       → REST API
+```
+
+## API
+
+| Ruta | Descripción |
+|------|-------------|
+| POST `/api/auth/login` | Iniciar sesión |
+| POST `/api/auth/logout` | Cerrar sesión |
+| GET `/api/auth/me` | Usuario actual |
+| POST `/api/scans` | Procesar escaneo |
+| GET `/api/reconciliation` | Reconciliación |
+| GET/POST `/api/sessions` | Sesiones |
+| POST `/api/import` | Excel |
+
+## Railway
+
+1. Añade un servicio **PostgreSQL** en Railway.
+2. Variables en la app:
+   - `DATABASE_URL` (desde el plugin Postgres)
+   - `JWT_SECRET`
+   - `DATABASE_SSL=true` (si aplica)
+3. Deploy con `Dockerfile` — healthcheck: `/api/health`
+
+## Modo demo (sin Postgres)
+
+En `.env.local`:
+
+```env
+BIBLIOSCAN_DEV_MODE=true
+NEXT_PUBLIC_BIBLIOSCAN_DEV_MODE=true
+```
+
+Datos en memoria; útil solo para probar UI sin base de datos.
+
+## Licencia
+
+Uso institucional — BiblioScan © 2025

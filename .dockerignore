@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.env*
+*.md
+!README.md
+.DS_Store
+biblioscan-tmp
+*.xlsx
