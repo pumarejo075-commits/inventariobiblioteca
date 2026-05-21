@@ -35,14 +35,17 @@ export function exportToCSV(rows: ReconciliationRow[], filename: string) {
 export function exportToExcel(rows: ReconciliationRow[], filename: string) {
   const data = rows.map((r) => ({
     Clave: r.clave,
+    "Código barras": r.barcode,
     Descripción: r.description,
+    Marca: r.brand ?? "",
+    Modelo: r.model ?? "",
     Esperado: r.expected_quantity,
     Encontrado: r.found_quantity,
     Faltante: r.missing_quantity,
     Excedente: r.excess_quantity,
     "Reconciliación %": r.reconciliation_percent,
-    Ubicación: r.location,
-    Responsable: r.responsible_person,
+    Ubicación: r.location ?? "",
+    Responsable: r.responsible_person ?? "",
   }));
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();

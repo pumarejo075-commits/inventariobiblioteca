@@ -2,12 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { ScanLine, Upload, AlertTriangle } from "lucide-react";
+import { ScanLine, Download, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { AppHeader } from "@/components/layout/app-header";
 import { ReconciliationSummary, ReconciliationCard } from "@/components/reconciliation/reconciliation-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSessionStore } from "@/hooks/use-session";
+import { exportToExcel } from "@/lib/reports/export";
 import type { ReconciliationRow } from "@/types/database";
 
 export default function HomePage() {
@@ -16,6 +18,7 @@ export default function HomePage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "missing">("all");
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,22 +48,31 @@ export default function HomePage() {
 
   const topMissing = rows.filter((r) => r.missing_quantity > 0).slice(0, 8);
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ filter: "all" });
+      if (activeSession) params.set("sessionId", activeSession.id);
+      const res = await fetch(`/api/reconciliation?${params}`);
+      const data: ReconciliationRow[] = await res.json();
+      if (!data?.length) {
+        toast.error("No hay datos para exportar");
+        return;
+      }
+      const date = new Date().toISOString().slice(0, 10);
+      exportToExcel(data, `inventario-biblioteca-${date}`);
+      toast.success(`Excel exportado (${data.length} activos)`);
+    } catch {
+      toast.error("No se pudo exportar el Excel");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <>
       <AppHeader title="Reconciliación" />
       <main className="mx-auto max-w-lg space-y-4 px-4 py-4">
-        {!activeSession && (
-          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--warning-bg)] p-4">
-            <p className="font-bold text-[var(--warning)]">Sin sesión activa</p>
-            <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-              Inicia una sesión de inventario para escanear activos.
-            </p>
-            <Button asChild className="mt-3 w-full" size="lg">
-              <Link href="/sessions">Seleccionar sesión</Link>
-            </Button>
-          </div>
-        )}
-
         <ReconciliationSummary
           expected={totals.expected}
           found={totals.found}
@@ -74,11 +86,16 @@ export default function HomePage() {
               Escanear
             </Button>
           </Link>
-          <Link href="/import">
-            <Button variant="secondary" size="icon" className="h-16 w-16">
-              <Upload className="h-6 w-6" />
-            </Button>
-          </Link>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-16 w-16 shrink-0"
+            disabled={exporting}
+            onClick={handleExport}
+            aria-label="Exportar Excel"
+          >
+            <Download className="h-6 w-6" />
+          </Button>
         </div>
 
         <Input
@@ -95,8 +112,8 @@ export default function HomePage() {
               onClick={() => setFilter(f)}
               className={`flex-1 rounded-xl py-3 text-sm font-bold uppercase ${
                 filter === f
-                  ? "bg-[var(--success)] text-white"
-                  : "border border-[var(--border)] bg-white text-[var(--foreground-muted)]"
+                  ? "bg-emerald-500 text-slate-950"
+                  : "border border-slate-700 bg-slate-900 text-slate-400"
               }`}
             >
               {f === "all" ? "Todos" : "Faltantes"}
@@ -105,12 +122,12 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <p className="py-8 text-center text-[var(--foreground-muted)]">Cargando...</p>
+          <p className="py-8 text-center text-slate-500">Cargando...</p>
         ) : topMissing.length === 0 ? (
-          <p className="py-8 text-center text-[var(--success)]">Sin faltantes detectados</p>
+          <p className="py-8 text-center text-emerald-400">Sin faltantes detectados</p>
         ) : (
           <section className="space-y-3">
-            <div className="flex items-center gap-2 text-[var(--danger)]">
+            <div className="flex items-center gap-2 text-red-400">
               <AlertTriangle className="h-5 w-5" />
               <h2 className="font-bold uppercase tracking-wide">Prioridad — faltantes</h2>
             </div>

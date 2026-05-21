@@ -5,6 +5,10 @@ import { Toaster } from "sonner";
 import { syncPendingScans } from "@/lib/offline/sync";
 import { useSessionStore } from "@/hooks/use-session";
 import { MOCK_SESSION } from "@/lib/dev/mock-data";
+import {
+  DEFAULT_INVENTORY_SESSION,
+  resolveActiveInventorySession,
+} from "@/lib/inventory-session";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const setActiveSession = useSessionStore((s) => s.setActiveSession);
@@ -12,7 +16,12 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_BIBLIOSCAN_DEV_MODE === "true") {
       if (!useSessionStore.getState().activeSession) setActiveSession(MOCK_SESSION);
+      return;
     }
+    if (!useSessionStore.getState().activeSession) {
+      setActiveSession(DEFAULT_INVENTORY_SESSION);
+    }
+    void resolveActiveInventorySession().then(setActiveSession);
   }, [setActiveSession]);
 
   useEffect(() => {
@@ -30,10 +39,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       {children}
       <Toaster
         position="top-center"
-        theme="light"
+        theme="dark"
         toastOptions={{
           classNames: {
-            toast: "bg-white border-[var(--border)] text-[var(--foreground)] shadow-md",
+            toast: "bg-slate-900 border-slate-700 text-slate-100",
           },
         }}
       />

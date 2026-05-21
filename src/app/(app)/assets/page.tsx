@@ -4,9 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Input } from "@/components/ui/input";
 import { ReconciliationCard } from "@/components/reconciliation/reconciliation-card";
+import { useSessionStore } from "@/hooks/use-session";
 import type { ReconciliationRow } from "@/types/database";
 
 export default function AssetsPage() {
+  const { activeSession } = useSessionStore();
   const [rows, setRows] = useState<ReconciliationRow[]>([]);
   const [q, setQ] = useState("");
   const [location, setLocation] = useState("");
@@ -15,6 +17,7 @@ export default function AssetsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ filter: "all" });
+    if (activeSession) params.set("sessionId", activeSession.id);
     if (q) params.set("q", q);
     const res = await fetch(`/api/reconciliation?${params}`);
     let data: ReconciliationRow[] = await res.json();
@@ -25,7 +28,7 @@ export default function AssetsPage() {
     }
     setRows(data ?? []);
     setLoading(false);
-  }, [q, location]);
+  }, [activeSession, q, location]);
 
   useEffect(() => {
     const t = setTimeout(load, 250);
@@ -46,9 +49,9 @@ export default function AssetsPage() {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
-        <p className="text-xs text-[var(--foreground-muted)]">{rows.length} activos</p>
+        <p className="text-xs text-slate-500">{rows.length} activos</p>
         {loading ? (
-          <p className="text-center text-[var(--foreground-muted)]">Cargando...</p>
+          <p className="text-center text-slate-500">Cargando...</p>
         ) : (
           rows.map((r) => (
             <ReconciliationCard

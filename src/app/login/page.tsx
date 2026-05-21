@@ -39,10 +39,10 @@ export default function LoginPage() {
 
   if (process.env.NEXT_PUBLIC_BIBLIOSCAN_DEV_MODE === "true") {
     return (
-      <div className="flex min-h-dvh flex-col justify-center bg-[var(--surface)] px-6">
+      <div className="flex min-h-dvh flex-col justify-center bg-slate-950 px-6">
         <div className="mx-auto w-full max-w-sm text-center">
-          <h1 className="text-3xl font-black text-[var(--foreground)]">BiblioScan</h1>
-          <p className="mt-2 text-sm text-[var(--warning)]">Modo demo (sin PostgreSQL)</p>
+          <h1 className="text-3xl font-black text-slate-100">BiblioScan</h1>
+          <p className="mt-2 text-sm text-amber-400">Modo demo (sin PostgreSQL)</p>
           <Button size="xl" className="mt-8 w-full" onClick={() => router.push("/")}>
             Entrar al inventario
           </Button>
@@ -52,21 +52,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col justify-center bg-[var(--surface)] px-6">
+    <div className="flex min-h-dvh flex-col justify-center bg-slate-950 px-6">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--success)]">
-            <ScanLine className="h-9 w-9 text-white" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500">
+            <ScanLine className="h-9 w-9 text-slate-950" />
           </div>
-          <h1 className="text-3xl font-black text-[var(--foreground)]">BiblioScan</h1>
-          <p className="text-center text-sm text-[var(--foreground-muted)]">
+          <h1 className="text-3xl font-black text-slate-100">BiblioScan</h1>
+          <p className="text-center text-sm text-slate-400">
             Inventario institucional · PostgreSQL
           </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="mb-1 block text-xs font-bold uppercase text-[var(--foreground-muted)]">
+            <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
               Correo
             </label>
             <Input
@@ -78,7 +78,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-bold uppercase text-[var(--foreground-muted)]">
+            <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
               Contraseña
             </label>
             <Input
@@ -90,15 +90,13 @@ export default function LoginPage() {
             />
           </div>
           {error && (
-            <p className="rounded-lg bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger)]">
-              {error}
-            </p>
+            <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>
           )}
           <Button type="submit" size="xl" className="w-full" disabled={loading}>
             {loading ? "Entrando..." : "Iniciar sesión"}
           </Button>
         </form>
-        <p className="mt-4 text-center text-xs text-[var(--foreground-muted)]">
+        <p className="mt-4 text-center text-xs text-slate-500">
           Demo: admin@biblioscan.local / admin123
         </p>
       </div>

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   applicationName: "BiblioScan",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "BiblioScan",
   },
   formatDetection: { telephone: false },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export const viewport: Viewport = {
-  themeColor: "#F9F8F6",
+  themeColor: "#020617",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
