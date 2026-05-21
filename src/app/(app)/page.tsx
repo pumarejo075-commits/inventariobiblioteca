@@ -2,39 +2,75 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { ScanLine, Download, AlertTriangle } from "lucide-react";
+import { ScanLine, Download, History } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/layout/app-header";
-import { ReconciliationSummary, ReconciliationCard } from "@/components/reconciliation/reconciliation-card";
+import { ReconciliationSummary } from "@/components/reconciliation/reconciliation-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { exportToExcel } from "@/lib/reports/export";
-import type { ReconciliationRow } from "@/types/database";
+import { cn } from "@/lib/utils";
+import type { ReconciliationRow, RecentScanRow, ScanResult } from "@/types/database";
+
+const RESULT_LABEL: Record<ScanResult, { label: string; className: string }> = {
+  found: { label: "Encontrado", className: "bg-emerald-500/20 text-emerald-400" },
+  group_reconciled: { label: "Paquete", className: "bg-emerald-500/20 text-emerald-400" },
+  duplicate: { label: "Duplicado", className: "bg-amber-500/20 text-amber-400" },
+  not_found: { label: "No registrado", className: "bg-red-500/20 text-red-400" },
+};
+
+function formatScannedAt(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "Hace un momento";
+  if (diffMin < 60) return `Hace ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `Hace ${diffH} h`;
+  return d.toLocaleString("es-MX", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function HomePage() {
-  const [rows, setRows] = useState<ReconciliationRow[]>([]);
-  const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<"all" | "missing">("all");
-  const [loading, setLoading] = useState(true);
+  const [totalsRows, setTotalsRows] = useState<ReconciliationRow[]>([]);
+  const [recentScans, setRecentScans] = useState<RecentScanRow[]>([]);
+  const [loadingTotals, setLoadingTotals] = useState(true);
+  const [loadingRecent, setLoadingRecent] = useState(true);
   const [exporting, setExporting] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (filter === "missing") params.set("filter", "missing");
-    const res = await fetch(`/api/reconciliation?${params}`);
+  const loadTotals = useCallback(async () => {
+    setLoadingTotals(true);
+    const res = await fetch("/api/reconciliation?filter=all");
     const data = await res.json();
-    setRows(data ?? []);
-    setLoading(false);
-  }, [q, filter]);
+    setTotalsRows(data ?? []);
+    setLoadingTotals(false);
+  }, []);
+
+  const loadRecent = useCallback(async () => {
+    setLoadingRecent(true);
+    const res = await fetch("/api/scans/recent");
+    const data = await res.json();
+    setRecentScans(Array.isArray(data) ? data : []);
+    setLoadingRecent(false);
+  }, []);
+
+  const loadAll = useCallback(() => {
+    void loadTotals();
+    void loadRecent();
+  }, [loadTotals, loadRecent]);
 
   useEffect(() => {
-    const t = setTimeout(load, q ? 300 : 0);
-    return () => clearTimeout(t);
-  }, [load, q]);
+    loadAll();
+    const onFocus = () => loadAll();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadAll]);
 
-  const totals = rows.reduce(
+  const totals = totalsRows.reduce(
     (acc, r) => ({
       expected: acc.expected + (r.expected_quantity ?? 0),
       found: acc.found + (r.found_quantity ?? 0),
@@ -43,13 +79,10 @@ export default function HomePage() {
     { expected: 0, found: 0, missing: 0 }
   );
 
-  const topMissing = rows.filter((r) => r.missing_quantity > 0).slice(0, 8);
-
   const handleExport = async () => {
     setExporting(true);
     try {
-      const params = new URLSearchParams({ filter: "all" });
-      const res = await fetch(`/api/reconciliation?${params}`);
+      const res = await fetch("/api/reconciliation?filter=all");
       const data: ReconciliationRow[] = await res.json();
       if (!data?.length) {
         toast.error("No hay datos para exportar");
@@ -69,11 +102,13 @@ export default function HomePage() {
     <>
       <AppHeader title="Reconciliación" />
       <main className="mx-auto max-w-lg space-y-4 px-4 py-4">
-        <ReconciliationSummary
-          expected={totals.expected}
-          found={totals.found}
-          missing={totals.missing}
-        />
+        {!loadingTotals && (
+          <ReconciliationSummary
+            expected={totals.expected}
+            found={totals.found}
+            missing={totals.missing}
+          />
+        )}
 
         <div className="flex gap-2">
           <Link href="/scanner" className="flex-1">
@@ -94,53 +129,59 @@ export default function HomePage() {
           </Button>
         </div>
 
-        <Input
-          placeholder="Buscar clave, descripción, responsable..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
+        <section className="space-y-3">
+          <div className="flex items-center gap-2 text-slate-300">
+            <History className="h-5 w-5" />
+            <h2 className="font-bold uppercase tracking-wide">Últimos escaneados</h2>
+          </div>
 
-        <div className="flex gap-2">
-          {(["all", "missing"] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`flex-1 rounded-xl py-3 text-sm font-bold uppercase ${
-                filter === f
-                  ? "bg-emerald-500 text-slate-950"
-                  : "border border-slate-700 bg-slate-900 text-slate-400"
-              }`}
-            >
-              {f === "all" ? "Todos" : "Faltantes"}
-            </button>
-          ))}
-        </div>
+          {loadingRecent ? (
+            <p className="py-8 text-center text-slate-500">Cargando...</p>
+          ) : recentScans.length === 0 ? (
+            <p className="py-8 text-center text-slate-500">
+              Aún no hay escaneos. Usa Escanear para registrar activos.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {recentScans.map((scan) => {
+                const badge = RESULT_LABEL[scan.result] ?? RESULT_LABEL.not_found;
+                const title =
+                  scan.description ??
+                  (scan.result === "not_found" ? "Código no registrado" : scan.barcode);
+                const subtitle = [scan.clave ?? scan.barcode, formatScannedAt(scan.scanned_at)]
+                  .filter(Boolean)
+                  .join(" · ");
 
-        {loading ? (
-          <p className="py-8 text-center text-slate-500">Cargando...</p>
-        ) : topMissing.length === 0 ? (
-          <p className="py-8 text-center text-emerald-400">Sin faltantes detectados</p>
-        ) : (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2 text-red-400">
-              <AlertTriangle className="h-5 w-5" />
-              <h2 className="font-bold uppercase tracking-wide">Prioridad — faltantes</h2>
-            </div>
-            {topMissing.map((r) => (
-              <ReconciliationCard
-                key={r.id ?? r.barcode}
-                title={r.description}
-                subtitle={r.clave}
-                expected={r.expected_quantity}
-                found={r.found_quantity}
-                missing={r.missing_quantity}
-                excess={r.excess_quantity}
-                compact
-              />
-            ))}
-          </section>
-        )}
+                return (
+                  <li
+                    key={scan.id}
+                    className="rounded-2xl border border-slate-800 bg-slate-900 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-slate-100">{title}</p>
+                        <p className="mt-0.5 truncate text-xs text-slate-500">{subtitle}</p>
+                        {scan.expected_quantity != null && scan.result !== "not_found" && (
+                          <p className="mt-2 text-xs text-slate-400">
+                            Encontrados: {scan.found_quantity ?? 0} / {scan.expected_quantity}
+                          </p>
+                        )}
+                      </div>
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold uppercase",
+                          badge.className
+                        )}
+                      >
+                        {badge.label}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       </main>
     </>
   );

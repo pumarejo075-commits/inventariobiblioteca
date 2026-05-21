@@ -82,6 +82,17 @@ export interface InventoryScan {
   scanned_at: string;
 }
 
+export interface RecentScanRow {
+  id: string;
+  barcode: string;
+  result: ScanResult;
+  scanned_at: string;
+  description: string | null;
+  clave: string | null;
+  expected_quantity: number | null;
+  found_quantity: number | null;
+}
+
 export interface ScanProcessResult {
   result: ScanResult | "not_found";
   message?: string;

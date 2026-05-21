@@ -1,6 +1,11 @@
 import { query } from "./pool";
 import { INVENTORY_SESSION_ID } from "@/lib/inventory/constants";
-import type { AppRole, InventorySession, ReconciliationRow } from "@/types/database";
+import type {
+  AppRole,
+  InventorySession,
+  ReconciliationRow,
+  RecentScanRow,
+} from "@/types/database";
 
 export interface DbUser {
   id: string;
@@ -68,6 +73,32 @@ export async function getReconciliation(opts: {
 
   const { rows } = await query(sql, params);
   return rows as ReconciliationRow[];
+}
+
+export async function getRecentScans(
+  sessionId: string,
+  limit = 25
+): Promise<RecentScanRow[]> {
+  const { rows } = await query(
+    `SELECT
+      s.id,
+      s.barcode,
+      s.result,
+      s.scanned_at,
+      i.description,
+      i.clave,
+      COALESCE(si.expected_quantity, i.expected_quantity) AS expected_quantity,
+      COALESCE(si.found_quantity, i.found_quantity) AS found_quantity
+    FROM inventory_scans s
+    LEFT JOIN inventory_items i ON i.id = s.item_id
+    LEFT JOIN inventory_session_items si
+      ON si.session_id = s.session_id AND si.item_id = s.item_id
+    WHERE s.session_id = $1
+    ORDER BY s.scanned_at DESC
+    LIMIT $2`,
+    [sessionId, limit]
+  );
+  return rows as RecentScanRow[];
 }
 
 export async function getInventorySession(): Promise<InventorySession> {
