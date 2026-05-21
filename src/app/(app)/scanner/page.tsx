@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useSessionStore } from "@/hooks/use-session";
 import { queueScan } from "@/lib/offline/db";
+import { normalizeBarcodeKey } from "@/lib/utils";
 import type { ScanProcessResult } from "@/types/database";
 const BarcodeScanner = dynamic(
   () => import("@/components/scanner/barcode-scanner").then((m) => m.BarcodeScanner),
@@ -22,6 +23,10 @@ export default function ScannerPage() {
 
   const handleScan = useCallback(
     async (barcode: string): Promise<ScanProcessResult> => {
+      const code = normalizeBarcodeKey(barcode);
+      if (!code) {
+        return { result: "not_found", message: "Código vacío" };
+      }
       if (!activeSession) {
         toast.error("Selecciona una sesión de inventario primero");
         return { result: "not_found", message: "Sin sesión activa" };
@@ -30,7 +35,7 @@ export default function ScannerPage() {
       if (!navigator.onLine) {
         await queueScan({
           sessionId: activeSession.id,
-          barcode,
+          barcode: code,
           forceOverride: false,
         });
         return {
@@ -45,11 +50,15 @@ export default function ScannerPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sessionId: activeSession.id,
-            barcode,
+            barcode: code,
             forceOverride: false,
           }),
         });
         const data = await res.json();
+        if (res.status === 401) {
+          toast.error("Sesión expirada. Vuelve a iniciar sesión.");
+          return { result: "not_found", message: "Sesión expirada" };
+        }
         if (!res.ok) {
           return { result: "not_found", message: data.error ?? "Error de escaneo" };
         }
@@ -57,7 +66,7 @@ export default function ScannerPage() {
       } catch {
         await queueScan({
           sessionId: activeSession.id,
-          barcode,
+          barcode: code,
           forceOverride: false,
         });
         return { result: "found", message: "Cola offline" };

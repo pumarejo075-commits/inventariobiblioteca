@@ -101,7 +101,19 @@ Abre la URL en el celular o PC.
 
 ---
 
-## Parte G — Primer login
+## Parte G — Inventario completo (automático)
+
+Al arrancar, la app carga **113 activos** desde `db/seed/inventory-uach-2025.json` (relación UACH Oct 2025).
+
+- En **Activos** debes ver ~113 registros (no solo 3).
+- En el listado la **clave** aparece **con espacios** (como el Excel).
+- En el **sticker** el código va **sin espacios**; el escáner normaliza automáticamente.
+
+Si ves solo 3 ítems: redeploy y revisa logs → `[BiblioScan] Seed inventario: 113 upserts`.
+
+---
+
+## Parte H — Primer login
 
 | Email | Contraseña |
 |-------|------------|

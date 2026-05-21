@@ -11,6 +11,8 @@
     "seed:excel": "node scripts/seed-from-excel.mjs",
     "db:up": "docker compose up -d",
     "db:migrate": "node scripts/db-migrate.mjs",
+    "seed:generate": "node scripts/generate-inventory-seed.mjs",
+    "seed:inventory": "node scripts/seed-inventory.mjs",
     "db:setup": "npm run db:up && sleep 3 && npm run db:migrate"
   },
   "overrides": {

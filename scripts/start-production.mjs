@@ -23,5 +23,8 @@ function run(cmd, args) {
 console.log("[BiblioScan] Aplicando migraciones PostgreSQL...");
 await run("node", ["scripts/db-migrate.mjs"]);
 
+console.log("[BiblioScan] Cargando inventario UACH...");
+await run("node", ["scripts/seed-inventory.mjs"]);
+
 console.log("[BiblioScan] Iniciando servidor...");
 await run("node", ["server.js"]);

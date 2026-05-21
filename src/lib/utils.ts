@@ -21,19 +21,31 @@ export function formatPercent(n: number): string {
   return `${n.toFixed(1)}%`;
 }
 
+let audioCtx: AudioContext | null = null;
+
+export function initAudioOnGesture() {
+  if (typeof window === "undefined") return;
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === "suspended") void audioCtx.resume();
+  } catch {
+    /* audio optional */
+  }
+}
+
 export function playBeep(frequency = 880, duration = 0.08) {
   if (typeof window === "undefined") return;
   try {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === "suspended") void audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(audioCtx.destination);
     osc.frequency.value = frequency;
     gain.gain.value = 0.15;
     osc.start();
-    osc.stop(ctx.currentTime + duration);
-    setTimeout(() => ctx.close(), 200);
+    osc.stop(audioCtx.currentTime + duration);
   } catch {
     /* audio optional */
   }
