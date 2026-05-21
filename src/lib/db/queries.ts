@@ -48,9 +48,16 @@ export async function getReconciliation(opts: {
       params.push(`%${q}%`);
       n++;
     }
-    if (filter === "missing") sql += ` AND missing_quantity > 0`;
-    if (filter === "found") sql += ` AND found_quantity > 0`;
-    sql += ` ORDER BY missing_quantity DESC LIMIT 500`;
+    if (filter === "missing" || filter === "incomplete") {
+      sql += ` AND missing_quantity > 0`;
+    } else if (filter === "complete") {
+      sql += ` AND missing_quantity = 0 AND excess_quantity = 0`;
+    } else if (filter === "excess") {
+      sql += ` AND excess_quantity > 0`;
+    } else if (filter === "found") {
+      sql += ` AND found_quantity > 0`;
+    }
+    sql += ` ORDER BY missing_quantity DESC, description ASC LIMIT 500`;
 
     const { rows } = await query(sql, params);
     return rows.map((r: Record<string, unknown>) => ({
@@ -68,8 +75,14 @@ export async function getReconciliation(opts: {
     params.push(`%${q}%`);
     n++;
   }
-  if (filter === "missing") sql += ` AND missing_quantity > 0`;
-  sql += ` ORDER BY missing_quantity DESC LIMIT 500`;
+  if (filter === "missing" || filter === "incomplete") {
+    sql += ` AND missing_quantity > 0`;
+  } else if (filter === "complete") {
+    sql += ` AND missing_quantity = 0 AND excess_quantity = 0`;
+  } else if (filter === "excess") {
+    sql += ` AND excess_quantity > 0`;
+  }
+  sql += ` ORDER BY missing_quantity DESC, description ASC LIMIT 500`;
 
   const { rows } = await query(sql, params);
   return rows as ReconciliationRow[];

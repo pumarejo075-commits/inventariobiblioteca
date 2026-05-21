@@ -16,8 +16,15 @@ export async function GET(request: NextRequest) {
           r.barcode.toLowerCase().includes(q)
       );
     }
-    if (filter === "missing") rows = rows.filter((r) => r.missing_quantity > 0);
-    if (filter === "found") rows = rows.filter((r) => r.found_quantity > 0);
+    if (filter === "missing" || filter === "incomplete") {
+      rows = rows.filter((r) => r.missing_quantity > 0);
+    } else if (filter === "complete") {
+      rows = rows.filter((r) => r.missing_quantity === 0 && r.excess_quantity === 0);
+    } else if (filter === "excess") {
+      rows = rows.filter((r) => r.excess_quantity > 0);
+    } else if (filter === "found") {
+      rows = rows.filter((r) => r.found_quantity > 0);
+    }
     return NextResponse.json(rows);
   }
 
