@@ -3,26 +3,24 @@
 import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
-import { useSessionStore } from "@/hooks/use-session";
+import { INVENTORY_SESSION_NAME } from "@/lib/inventory/constants";
 import type { ReconciliationRow } from "@/types/database";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/reports/export";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
 
 export default function ReportsPage() {
-  const { activeSession } = useSessionStore();
   const [rows, setRows] = useState<ReconciliationRow[]>([]);
   const [tab, setTab] = useState<"missing" | "found" | "all">("missing");
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (activeSession) params.set("sessionId", activeSession.id);
     if (tab === "missing") params.set("filter", "missing");
     if (tab === "found") params.set("filter", "found");
     fetch(`/api/reconciliation?${params}`).then((r) => r.json()).then(setRows);
-  }, [activeSession, tab]);
+  }, [tab]);
 
-  const filename = `biblioscan-${activeSession?.name ?? "global"}-${tab}`;
-  const title = `Reporte ${tab} — ${activeSession?.name ?? "Inventario global"}`;
+  const filename = `biblioscan-${tab}`;
+  const title = `Reporte ${tab} — ${INVENTORY_SESSION_NAME}`;
 
   const stats = {
     total: rows.length,

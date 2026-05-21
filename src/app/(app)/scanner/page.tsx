@@ -4,10 +4,9 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import { useSessionStore } from "@/hooks/use-session";
 import { queueScan } from "@/lib/offline/db";
+import { INVENTORY_SESSION_ID } from "@/lib/inventory/constants";
 import { normalizeBarcodeKey } from "@/lib/utils";
-import { DEFAULT_INVENTORY_SESSION_ID } from "@/lib/inventory-session";
 import type { ScanProcessResult } from "@/types/database";
 
 const BarcodeScanner = dynamic(
@@ -24,58 +23,52 @@ const BarcodeScanner = dynamic(
 
 export default function ScannerPage() {
   const router = useRouter();
-  const { activeSession } = useSessionStore();
-  const sessionId = activeSession?.id ?? DEFAULT_INVENTORY_SESSION_ID;
 
-  const handleScan = useCallback(
-    async (barcode: string): Promise<ScanProcessResult> => {
-      const code = normalizeBarcodeKey(barcode);
-      if (!code) {
-        return { result: "not_found", message: "Código vacío" };
-      }
+  const handleScan = useCallback(async (barcode: string): Promise<ScanProcessResult> => {
+    const code = normalizeBarcodeKey(barcode);
+    if (!code) {
+      return { result: "not_found", message: "Código vacío" };
+    }
 
-      if (!navigator.onLine) {
-        await queueScan({
-          sessionId,
+    if (!navigator.onLine) {
+      await queueScan({
+        sessionId: INVENTORY_SESSION_ID,
+        barcode: code,
+        forceOverride: false,
+      });
+      return {
+        result: "found",
+        message: "Guardado offline — se sincronizará al reconectar",
+      };
+    }
+
+    try {
+      const res = await fetch("/api/scans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           barcode: code,
           forceOverride: false,
-        });
-        return {
-          result: "found",
-          message: "Guardado offline — se sincronizará al reconectar",
-        };
+        }),
+      });
+      const data = await res.json();
+      if (res.status === 401) {
+        toast.error("Sesión expirada. Vuelve a iniciar sesión.");
+        return { result: "not_found", message: "Sesión expirada" };
       }
-
-      try {
-        const res = await fetch("/api/scans", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sessionId,
-            barcode: code,
-            forceOverride: false,
-          }),
-        });
-        const data = await res.json();
-        if (res.status === 401) {
-          toast.error("Sesión expirada. Vuelve a iniciar sesión.");
-          return { result: "not_found", message: "Sesión expirada" };
-        }
-        if (!res.ok) {
-          return { result: "not_found", message: data.error ?? "Error de escaneo" };
-        }
-        return data as ScanProcessResult;
-      } catch {
-        await queueScan({
-          sessionId,
-          barcode: code,
-          forceOverride: false,
-        });
-        return { result: "found", message: "Cola offline" };
+      if (!res.ok) {
+        return { result: "not_found", message: data.error ?? "Error de escaneo" };
       }
-    },
-    [sessionId]
-  );
+      return data as ScanProcessResult;
+    } catch {
+      await queueScan({
+        sessionId: INVENTORY_SESSION_ID,
+        barcode: code,
+        forceOverride: false,
+      });
+      return { result: "found", message: "Cola offline" };
+    }
+  }, []);
 
   return <BarcodeScanner onScan={handleScan} onClose={() => router.back()} />;
 }

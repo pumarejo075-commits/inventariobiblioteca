@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getReconciliation } from "@/lib/db/queries";
+import { INVENTORY_SESSION_ID } from "@/lib/inventory/constants";
 import { isDevMode, MOCK_ITEMS } from "@/lib/dev/mock-data";
 
 export async function GET(request: NextRequest) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const data = await getReconciliation({
-      sessionId: request.nextUrl.searchParams.get("sessionId") ?? undefined,
+      sessionId: INVENTORY_SESSION_ID,
       q: request.nextUrl.searchParams.get("q")?.trim(),
       filter: request.nextUrl.searchParams.get("filter") ?? undefined,
     });

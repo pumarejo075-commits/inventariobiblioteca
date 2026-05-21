@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
-import { getSession, canWrite } from "@/lib/auth/session";
-import { closeSession } from "@/lib/db/queries";
+import { getInventorySession } from "@/lib/db/queries";
+import { isDevMode } from "@/lib/dev/mock-data";
+import { INVENTORY_SESSION_ID, INVENTORY_SESSION_NAME } from "@/lib/inventory/constants";
 
-export async function POST(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!canWrite(session.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+/** El inventario no se cierra — siempre activo */
+export async function POST() {
+  if (isDevMode()) {
+    return NextResponse.json({
+      id: INVENTORY_SESSION_ID,
+      name: INVENTORY_SESSION_NAME,
+      status: "active",
+    });
   }
 
-  const { id } = await params;
   try {
-    return NextResponse.json(await closeSession(id));
+    const session = await getInventorySession();
+    return NextResponse.json(session);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Database error" },

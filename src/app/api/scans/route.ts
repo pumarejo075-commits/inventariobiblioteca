@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, isAdmin } from "@/lib/auth/session";
 import { processScan, insertLog } from "@/lib/db/queries";
+import { INVENTORY_SESSION_ID } from "@/lib/inventory/constants";
 import { isDevMode, mockProcessScan } from "@/lib/dev/mock-data";
 import { z } from "zod";
 
 const scanSchema = z.object({
-  sessionId: z.string().uuid(),
+  sessionId: z.string().uuid().optional(),
   barcode: z.string().min(1).max(200),
   forceOverride: z.boolean().optional().default(false),
   deviceId: z.string().optional(),
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { sessionId, barcode, forceOverride, deviceId } = parsed.data;
+  const { barcode, forceOverride, deviceId } = parsed.data;
 
   if (isDevMode()) {
     return NextResponse.json(mockProcessScan(barcode));
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const data = await processScan({
-      sessionId,
+      sessionId: INVENTORY_SESSION_ID,
       barcode,
       scannedBy: session!.sub,
       deviceId,
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
       action: "scan",
       entity_type: "inventory_scans",
       user_id: session!.sub,
-      payload: { sessionId, barcode, result: data },
+      payload: { sessionId: INVENTORY_SESSION_ID, barcode, result: data },
     });
 
     return NextResponse.json(data);

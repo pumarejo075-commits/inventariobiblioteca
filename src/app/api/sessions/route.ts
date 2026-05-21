@@ -1,20 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession, canWrite } from "@/lib/auth/session";
-import { listSessions, createSession } from "@/lib/db/queries";
-import { isDevMode, MOCK_SESSION } from "@/lib/dev/mock-data";
-import { z } from "zod";
+import { NextResponse } from "next/server";
+import { getInventorySession } from "@/lib/db/queries";
+import { INVENTORY_SESSION_ID, INVENTORY_SESSION_NAME } from "@/lib/inventory/constants";
+import { isDevMode } from "@/lib/dev/mock-data";
 
-const createSchema = z.object({
-  name: z.string().min(2).max(120),
-  description: z.string().optional(),
-  location_filter: z.string().optional(),
-});
-
+/** Inventario único — solo lectura del registro interno */
 export async function GET() {
-  if (isDevMode()) return NextResponse.json([MOCK_SESSION]);
+  if (isDevMode()) {
+    return NextResponse.json({
+      id: INVENTORY_SESSION_ID,
+      name: INVENTORY_SESSION_NAME,
+      status: "active",
+    });
+  }
 
   try {
-    return NextResponse.json(await listSessions());
+    const session = await getInventorySession();
+    return NextResponse.json(session);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Database error" },
@@ -23,32 +24,9 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session && !isDevMode()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const parsed = createSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
-
-  if (isDevMode()) {
-    return NextResponse.json({ ...MOCK_SESSION, name: parsed.data.name });
-  }
-
-  if (!canWrite(session!.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  try {
-    const created = await createSession(parsed.data, session!.sub);
-    return NextResponse.json(created);
-  } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Database error" },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  return NextResponse.json(
+    { error: "Solo existe un inventario; no se pueden crear sesiones" },
+    { status: 405 }
+  );
 }

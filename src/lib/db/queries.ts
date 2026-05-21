@@ -1,4 +1,5 @@
 import { query } from "./pool";
+import { INVENTORY_SESSION_ID } from "@/lib/inventory/constants";
 import type { AppRole, InventorySession, ReconciliationRow } from "@/types/database";
 
 export interface DbUser {
@@ -69,41 +70,19 @@ export async function getReconciliation(opts: {
   return rows as ReconciliationRow[];
 }
 
-export async function listSessions(): Promise<InventorySession[]> {
+export async function getInventorySession(): Promise<InventorySession> {
   const { rows } = await query(
-    `SELECT * FROM inventory_sessions ORDER BY created_at DESC`
+    `SELECT * FROM inventory_sessions WHERE id = $1`,
+    [INVENTORY_SESSION_ID]
   );
-  return rows as InventorySession[];
-}
-
-export async function createSession(
-  data: { name: string; description?: string; location_filter?: string },
-  userId: string
-): Promise<InventorySession> {
-  const { rows } = await query(
-    `INSERT INTO inventory_sessions (name, description, location_filter, status, started_at, created_by)
-     VALUES ($1, $2, $3, 'active', NOW(), $4)
+  if (rows[0]) return rows[0] as InventorySession;
+  const { rows: created } = await query(
+    `INSERT INTO inventory_sessions (id, name, description, status, started_at)
+     VALUES ($1, 'Inventario Biblioteca', 'Inventario patrimonial UACH', 'active', NOW())
      RETURNING *`,
-    [data.name, data.description ?? null, data.location_filter ?? null, userId]
+    [INVENTORY_SESSION_ID]
   );
-  const session = rows[0];
-
-  await query(
-    `INSERT INTO inventory_session_items (session_id, item_id, expected_quantity, found_quantity)
-     SELECT $1, id, expected_quantity, 0 FROM inventory_items
-     ON CONFLICT (session_id, item_id) DO NOTHING`,
-    [session.id]
-  );
-
-  return session;
-}
-
-export async function closeSession(id: string): Promise<InventorySession> {
-  const { rows } = await query(
-    `UPDATE inventory_sessions SET status = 'closed', closed_at = NOW() WHERE id = $1 RETURNING *`,
-    [id]
-  );
-  return rows[0];
+  return created[0] as InventorySession;
 }
 
 export async function processScan(opts: {

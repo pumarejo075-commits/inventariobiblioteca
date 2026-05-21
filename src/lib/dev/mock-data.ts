@@ -2,7 +2,7 @@ import type { InventorySession, ReconciliationRow, ScanProcessResult } from "@/t
 
 export const MOCK_SESSION: InventorySession = {
   id: "a0000000-0000-4000-8000-000000000001",
-  name: "Auditoría Octubre 2025",
+  name: "Inventario Biblioteca",
   description: "Demo local — Biblioteca",
   status: "active",
   location_filter: null,

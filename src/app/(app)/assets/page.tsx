@@ -4,11 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Input } from "@/components/ui/input";
 import { ReconciliationCard } from "@/components/reconciliation/reconciliation-card";
-import { useSessionStore } from "@/hooks/use-session";
 import type { ReconciliationRow } from "@/types/database";
 
 export default function AssetsPage() {
-  const { activeSession } = useSessionStore();
   const [rows, setRows] = useState<ReconciliationRow[]>([]);
   const [q, setQ] = useState("");
   const [location, setLocation] = useState("");
@@ -17,7 +15,6 @@ export default function AssetsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ filter: "all" });
-    if (activeSession) params.set("sessionId", activeSession.id);
     if (q) params.set("q", q);
     const res = await fetch(`/api/reconciliation?${params}`);
     let data: ReconciliationRow[] = await res.json();
@@ -28,7 +25,7 @@ export default function AssetsPage() {
     }
     setRows(data ?? []);
     setLoading(false);
-  }, [activeSession, q, location]);
+  }, [q, location]);
 
   useEffect(() => {
     const t = setTimeout(load, 250);

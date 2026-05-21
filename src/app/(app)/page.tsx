@@ -8,12 +8,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { ReconciliationSummary, ReconciliationCard } from "@/components/reconciliation/reconciliation-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSessionStore } from "@/hooks/use-session";
 import { exportToExcel } from "@/lib/reports/export";
 import type { ReconciliationRow } from "@/types/database";
 
 export default function HomePage() {
-  const { activeSession } = useSessionStore();
   const [rows, setRows] = useState<ReconciliationRow[]>([]);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "missing">("all");
@@ -23,14 +21,13 @@ export default function HomePage() {
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (activeSession) params.set("sessionId", activeSession.id);
     if (q) params.set("q", q);
     if (filter === "missing") params.set("filter", "missing");
     const res = await fetch(`/api/reconciliation?${params}`);
     const data = await res.json();
     setRows(data ?? []);
     setLoading(false);
-  }, [activeSession, q, filter]);
+  }, [q, filter]);
 
   useEffect(() => {
     const t = setTimeout(load, q ? 300 : 0);
@@ -52,7 +49,6 @@ export default function HomePage() {
     setExporting(true);
     try {
       const params = new URLSearchParams({ filter: "all" });
-      if (activeSession) params.set("sessionId", activeSession.id);
       const res = await fetch(`/api/reconciliation?${params}`);
       const data: ReconciliationRow[] = await res.json();
       if (!data?.length) {

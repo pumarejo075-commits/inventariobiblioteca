@@ -22,7 +22,7 @@ interface BarcodeScannerProps {
   disabled?: boolean;
 }
 
-type OverlayState = ScanResult | "not_found" | "session_closed" | null;
+type OverlayState = ScanResult | "not_found" | null;
 
 const OVERLAY_MS = 2000;
 
@@ -49,11 +49,6 @@ const OVERLAY_CONFIG: Record<
     bg: "bg-red-600",
     label: "NO REGISTRADO",
     sub: "Código no existe en inventario",
-  },
-  session_closed: {
-    bg: "bg-amber-600",
-    label: "SESIÓN CERRADA",
-    sub: "El inventario está cerrado. Recarga la app tras el deploy.",
   },
 };
 
@@ -97,20 +92,14 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
   const detectorRef = useRef<BarcodeDetector | null>(null);
 
   const showFeedback = useCallback((result: ScanProcessResult, barcode: string) => {
-    const msg = (result.message ?? "").toLowerCase();
-    const state: OverlayState =
-      msg.includes("session is closed") || msg.includes("sesión cerrada")
-        ? "session_closed"
-        : ((result.result ?? "not_found") as OverlayState);
+    const state = (result.result ?? "not_found") as OverlayState;
     setProcessing(false);
     setOverlay(state);
     setOverlayBarcode(barcode);
     setOverlayDetail(
       result.item
         ? `${result.item.description}\n${result.item.clave ?? barcode}\nEsp: ${result.item.expected_quantity} · Enc: ${result.item.found_quantity}`
-        : state === "session_closed"
-          ? "El activo puede existir, pero no se puede registrar hasta reabrir la sesión."
-          : (result.message ?? "")
+        : result.message ?? ""
     );
 
     if (state === "found" || state === "group_reconciled") {
