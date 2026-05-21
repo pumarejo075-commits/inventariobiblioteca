@@ -73,19 +73,19 @@ src/app/api/       → REST API
 | GET/POST `/api/sessions` | Sesiones |
 | POST `/api/import` | Excel |
 
-## Railway
+## Railway (app + PostgreSQL)
 
-1. Crea proyecto desde GitHub → [inventariobiblioteca](https://github.com/pumarejo075-commits/inventariobiblioteca).
-2. Añade plugin **PostgreSQL** y enlaza `DATABASE_URL` al servicio web.
-3. Variables obligatorias en el servicio **BiblioScan**:
-   - `DATABASE_URL` — referencia al Postgres de Railway
-   - `JWT_SECRET` — cadena aleatoria de 32+ caracteres
-   - `DATABASE_SSL=true` — recomendado en producción
-4. Tras el primer deploy, ejecuta migraciones (local con la URL de Railway):
-   ```bash
-   DATABASE_URL="postgresql://..." npm run db:migrate
-   ```
-5. Healthcheck: `GET /api/health`
+Guía paso a paso: **[docs/RAILWAY.md](docs/RAILWAY.md)**
+
+Resumen:
+
+1. Proyecto desde GitHub → [inventariobiblioteca](https://github.com/pumarejo075-commits/inventariobiblioteca)
+2. **+ Create** → **PostgreSQL** en el mismo proyecto
+3. En el servicio web: variable `DATABASE_URL` → **referencia** al servicio Postgres
+4. Añadir `JWT_SECRET` y `DATABASE_SSL=true`
+5. Deploy: las migraciones corren solas al iniciar el contenedor
+
+Login inicial: `admin@biblioscan.local` / `admin123`
 
 ## Modo demo (sin Postgres)
 

@@ -8,10 +8,16 @@ export function getPool() {
     if (!connectionString) {
       throw new Error("DATABASE_URL is not set");
     }
+    const needsSsl =
+      process.env.DATABASE_SSL === "true" ||
+      connectionString.includes("sslmode=require") ||
+      connectionString.includes("railway.app") ||
+      connectionString.includes("rlwy.net");
+
     pool = new Pool({
       connectionString,
       max: 10,
-      ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : undefined,
+      ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
     });
   }
   return pool;
