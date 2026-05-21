@@ -141,61 +141,6 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
     [onScan, showFeedback, disabled]
   );
 
-  const decodeRegion = useCallback(
-    async (
-      video: HTMLVideoElement,
-      canvas: HTMLCanvasElement,
-      reader: MultiFormatReader,
-      region: { sx: number; sy: number; w: number; h: number }
-    ) => {
-      const { sx, sy, w, h } = region;
-      const scale = 2;
-      const outW = w * scale;
-      const outH = h * scale;
-      canvas.width = outW;
-      canvas.height = outH;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if (!ctx) return false;
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(video, sx, sy, w, h, 0, 0, outW, outH);
-
-      if (typeof BarcodeDetector !== "undefined" && detectorRef.current) {
-        try {
-          const detected = await detectorRef.current.detect(canvas);
-          if (detected[0]?.rawValue) {
-            void handleDecode(detected[0].rawValue);
-            return true;
-          }
-        } catch {
-          /* try zxing next */
-        }
-      }
-
-      try {
-        const imageData = ctx.getImageData(0, 0, outW, outH);
-        const gray = new Uint8ClampedArray(outW * outH);
-        const d = imageData.data;
-        for (let i = 0; i < gray.length; i++) {
-          const o = i * 4;
-          gray[i] = (d[o] + d[o + 1] + d[o + 2]) / 3;
-        }
-        const source = new RGBLuminanceSource(gray, outW, outH);
-        const bitmap = new BinaryBitmap(new HybridBinarizer(source));
-        const result = reader.decode(bitmap);
-        if (result?.getText()) {
-          void handleDecode(result.getText());
-          return true;
-        }
-      } catch {
-        /* no barcode this frame */
-      }
-      return false;
-    },
-    [handleDecode]
-  );
-
-  const framePassRef = useRef(0);
-
   const tryDecodeCanvas = useCallback(async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -206,16 +151,45 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
     const vh = video.videoHeight;
     if (!vw || !vh) return;
 
-    framePassRef.current += 1;
-    const useFullFrame = framePassRef.current % 5 === 0;
-
-    const cropW = Math.floor(vw * (useFullFrame ? 1 : 0.92));
-    const cropH = Math.floor(vh * (useFullFrame ? 1 : 0.55));
+    const cropW = Math.floor(vw * 0.85);
+    const cropH = Math.floor(vh * 0.35);
     const sx = Math.floor((vw - cropW) / 2);
     const sy = Math.floor((vh - cropH) / 2);
 
-    await decodeRegion(video, canvas, reader, { sx, sy, w: cropW, h: cropH });
-  }, [decodeRegion]);
+    canvas.width = cropW;
+    canvas.height = cropH;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(video, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
+
+    if (typeof BarcodeDetector !== "undefined" && detectorRef.current) {
+      try {
+        const detected = await detectorRef.current.detect(canvas);
+        if (detected[0]?.rawValue) {
+          void handleDecode(detected[0].rawValue);
+          return;
+        }
+      } catch {
+        /* try zxing next */
+      }
+    }
+
+    try {
+      const imageData = ctx.getImageData(0, 0, cropW, cropH);
+      const gray = new Uint8ClampedArray(cropW * cropH);
+      const d = imageData.data;
+      for (let i = 0; i < gray.length; i++) {
+        const o = i * 4;
+        gray[i] = (d[o] + d[o + 1] + d[o + 2]) / 3;
+      }
+      const source = new RGBLuminanceSource(gray, cropW, cropH);
+      const bitmap = new BinaryBitmap(new HybridBinarizer(source));
+      const result = reader.decode(bitmap);
+      if (result?.getText()) void handleDecode(result.getText());
+    } catch {
+      /* no barcode this frame */
+    }
+  }, [handleDecode]);
 
   useEffect(() => {
     scanningRef.current = true;
@@ -258,7 +232,7 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
         const loop = () => {
           if (!scanningRef.current) return;
           void tryDecodeCanvas();
-          rafRef.current = window.setTimeout(loop, 100);
+          rafRef.current = window.setTimeout(loop, 120);
         };
         loop();
       } catch (e) {
@@ -317,8 +291,12 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
       />
       <canvas ref={canvasRef} className="hidden" aria-hidden />
 
+      {/* Línea guía: alinea el código de barras horizontalmente aquí */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-[min(52vh,22rem)] w-[92%] max-w-md rounded-2xl border-2 border-emerald-400/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
+        <div
+          className="h-px w-[88%] max-w-md bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]"
+          aria-hidden
+        />
       </div>
 
       <div className="relative z-10 flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))]">
@@ -391,13 +369,13 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
           Escribir código
         </Button>
         <p className="text-center text-sm text-white/70">
-          Apunta al código de barras (sticker sin espacios)
+          Alinea el código de barras con la línea roja
         </p>
       </div>
 
       {manualOpen && (
         <div className="absolute inset-0 z-30 flex items-end bg-black/70 p-4">
-          <div className="w-full space-y-3 rounded-2xl bg-white p-4 text-[var(--foreground)]">
+          <div className="w-full space-y-3 rounded-2xl bg-slate-900 p-4">
             <p className="font-bold text-white">Código manual</p>
             <Input
               value={manualCode}
@@ -407,7 +385,12 @@ export function BarcodeScanner({ onScan, onClose, disabled }: BarcodeScannerProp
               autoFocus
             />
             <div className="flex gap-2">
-              <Button type="button" variant="secondary" className="flex-1" onClick={() => setManualOpen(false)}>
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setManualOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button type="button" className="flex-1" onClick={submitManual}>
