@@ -149,6 +149,12 @@ export async function processScan(opts: {
   return rows[0].process_scan;
 }
 
+export async function undoScan(scanId: string): Promise<{ ok: boolean; error?: string }> {
+  const { rows } = await query(`SELECT undo_scan($1::uuid) AS result`, [scanId]);
+  const result = rows[0]?.result as { ok?: boolean; error?: string } | undefined;
+  return { ok: result?.ok === true, error: result?.error };
+}
+
 export async function insertLog(opts: {
   action: string;
   entity_type: string;

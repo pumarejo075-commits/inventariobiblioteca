@@ -6,13 +6,30 @@ import { Input } from "@/components/ui/input";
 import { ReconciliationCard } from "@/components/reconciliation/reconciliation-card";
 import type { ReconciliationRow } from "@/types/database";
 
-type StatusFilter = "complete" | "incomplete" | "excess";
+type StatusFilter = "all" | "complete" | "incomplete" | "excess";
 
 const FILTERS: { id: StatusFilter; label: string }[] = [
+  { id: "all", label: "Todos" },
   { id: "complete", label: "Completos" },
   { id: "incomplete", label: "Incompletos" },
   { id: "excess", label: "Excedidos" },
 ];
+
+function filterButtonClass(id: StatusFilter, active: boolean): string {
+  if (!active) {
+    return "min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-slate-400";
+  }
+  switch (id) {
+    case "complete":
+      return "min-w-0 flex-1 rounded-lg bg-emerald-500 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-slate-950";
+    case "incomplete":
+      return "min-w-0 flex-1 rounded-lg bg-red-500 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-white";
+    case "excess":
+      return "min-w-0 flex-1 rounded-lg bg-blue-500 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-white";
+    default:
+      return "min-w-0 flex-1 rounded-lg bg-slate-600 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-white";
+  }
+}
 
 export default function AssetsPage() {
   const [rows, setRows] = useState<ReconciliationRow[]>([]);
@@ -22,7 +39,8 @@ export default function AssetsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ filter: statusFilter });
+    const params = new URLSearchParams();
+    if (statusFilter !== "all") params.set("filter", statusFilter);
     if (q) params.set("q", q);
     const res = await fetch(`/api/reconciliation?${params}`);
     const data: ReconciliationRow[] = await res.json();
@@ -45,21 +63,13 @@ export default function AssetsPage() {
           onChange={(e) => setQ(e.target.value)}
         />
 
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           {FILTERS.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => setStatusFilter(id)}
-              className={`flex-1 rounded-xl py-3 text-xs font-bold uppercase sm:text-sm ${
-                statusFilter === id
-                  ? id === "complete"
-                    ? "bg-emerald-500 text-slate-950"
-                    : id === "excess"
-                      ? "bg-blue-500 text-white"
-                      : "bg-red-500 text-white"
-                  : "border border-slate-700 bg-slate-900 text-slate-400"
-              }`}
+              className={filterButtonClass(id, statusFilter === id)}
             >
               {label}
             </button>

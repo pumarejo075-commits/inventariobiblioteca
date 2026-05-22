@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { ScanLine, Download, History } from "lucide-react";
+import { ScanLine, Download, History, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/layout/app-header";
 import { ReconciliationSummary } from "@/components/reconciliation/reconciliation-card";
@@ -41,6 +41,7 @@ export default function HomePage() {
   const [loadingTotals, setLoadingTotals] = useState(true);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadTotals = useCallback(async () => {
     setLoadingTotals(true);
@@ -78,6 +79,27 @@ export default function HomePage() {
     }),
     { expected: 0, found: 0, missing: 0 }
   );
+
+  const handleDeleteScan = async (scanId: string) => {
+    if (!confirm("¿Eliminar este escaneo? Se restará del conteo de encontrados.")) {
+      return;
+    }
+    setDeletingId(scanId);
+    try {
+      const res = await fetch(`/api/scans/${scanId}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error ?? "No se pudo eliminar el escaneo");
+        return;
+      }
+      toast.success("Escaneo eliminado");
+      loadAll();
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleExport = async () => {
     setExporting(true);
@@ -167,14 +189,25 @@ export default function HomePage() {
                           </p>
                         )}
                       </div>
-                      <span
-                        className={cn(
-                          "shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold uppercase",
-                          badge.className
-                        )}
-                      >
-                        {badge.label}
-                      </span>
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <span
+                          className={cn(
+                            "rounded-lg px-2 py-1 text-[10px] font-bold uppercase",
+                            badge.className
+                          )}
+                        >
+                          {badge.label}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteScan(scan.id)}
+                          disabled={deletingId === scan.id}
+                          aria-label="Eliminar escaneo"
+                          className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-red-400 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </li>
                 );

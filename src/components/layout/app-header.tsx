@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { INVENTORY_SESSION_NAME } from "@/lib/inventory/constants";
 
 export function AppHeader({ title }: { title: string }) {
@@ -18,8 +18,9 @@ export function AppHeader({ title }: { title: string }) {
         <Link
           href="/settings"
           className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-slate-400 active:bg-slate-800"
+          aria-label="Manual de uso y configuración"
         >
-          <Settings className="h-6 w-6" />
+          <BookOpen className="h-6 w-6" />
         </Link>
       </div>
     </header>

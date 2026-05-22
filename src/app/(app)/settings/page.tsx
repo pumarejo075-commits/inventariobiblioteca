@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
+import { UsageManual } from "@/components/manual/usage-manual";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { getPendingScans } from "@/lib/offline/db";
@@ -47,43 +48,53 @@ export default function SettingsPage() {
 
   return (
     <>
-      <AppHeader title="Configuración" />
+      <AppHeader title="Manual y cuenta" />
       <main className="mx-auto max-w-lg space-y-4 px-4 py-4 pb-32">
-        <Card>
-          <CardTitle>{profile?.full_name ?? profile?.email ?? "Usuario"}</CardTitle>
-          <CardDescription>Rol: {profile?.role ?? "—"}</CardDescription>
-        </Card>
+        <UsageManual />
 
-        <Card className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {online ? (
-              <Wifi className="h-6 w-6 text-emerald-400" />
-            ) : (
-              <WifiOff className="h-6 w-6 text-amber-400" />
-            )}
-            <div>
-              <CardTitle className="text-base">
-                {online ? "En línea" : "Sin conexión"}
-              </CardTitle>
-              <CardDescription>{pending} escaneos en cola offline</CardDescription>
-            </div>
+        <div className="border-t border-slate-800 pt-2">
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            Cuenta y sistema
+          </p>
+
+          <div className="space-y-4">
+            <Card>
+              <CardTitle>{profile?.full_name ?? profile?.email ?? "Usuario"}</CardTitle>
+              <CardDescription>Rol: {profile?.role ?? "—"}</CardDescription>
+            </Card>
+
+            <Card className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {online ? (
+                  <Wifi className="h-6 w-6 text-emerald-400" />
+                ) : (
+                  <WifiOff className="h-6 w-6 text-amber-400" />
+                )}
+                <div>
+                  <CardTitle className="text-base">
+                    {online ? "En línea" : "Sin conexión"}
+                  </CardTitle>
+                  <CardDescription>{pending} escaneos en cola offline</CardDescription>
+                </div>
+              </div>
+              <Button variant="secondary" size="icon" onClick={sync}>
+                <RefreshCw className="h-5 w-5" />
+              </Button>
+            </Card>
+
+            <Card>
+              <CardTitle className="text-base">PWA</CardTitle>
+              <CardDescription>
+                Instala BiblioScan desde el menú del navegador.
+              </CardDescription>
+            </Card>
+
+            <Button variant="destructive" size="lg" className="w-full gap-2" onClick={logout}>
+              <LogOut className="h-5 w-5" />
+              Cerrar sesión
+            </Button>
           </div>
-          <Button variant="secondary" size="icon" onClick={sync}>
-            <RefreshCw className="h-5 w-5" />
-          </Button>
-        </Card>
-
-        <Card>
-          <CardTitle className="text-base">PWA</CardTitle>
-          <CardDescription>
-            Instala BiblioScan desde el menú del navegador.
-          </CardDescription>
-        </Card>
-
-        <Button variant="destructive" size="lg" className="w-full gap-2" onClick={logout}>
-          <LogOut className="h-5 w-5" />
-          Cerrar sesión
-        </Button>
+        </div>
       </main>
     </>
   );

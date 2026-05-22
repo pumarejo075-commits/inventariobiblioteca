@@ -1,4 +1,10 @@
-import type { InventorySession, ReconciliationRow, ScanProcessResult } from "@/types/database";
+import type {
+  InventorySession,
+  ReconciliationRow,
+  RecentScanRow,
+  ScanProcessResult,
+  ScanResult,
+} from "@/types/database";
 
 export const MOCK_SESSION: InventorySession = {
   id: "a0000000-0000-4000-8000-000000000001",
@@ -67,6 +73,35 @@ export const MOCK_ITEMS: ReconciliationRow[] = [
   },
 ];
 
+const mockRecentScans: RecentScanRow[] = [];
+let mockScanSeq = 0;
+
+export function getMockRecentScans(limit = 25): RecentScanRow[] {
+  return mockRecentScans.slice(0, limit);
+}
+
+export function mockUndoScan(scanId: string): { ok: boolean; error?: string } {
+  const idx = mockRecentScans.findIndex((s) => s.id === scanId);
+  if (idx < 0) return { ok: false, error: "Escaneo no encontrado" };
+
+  const scan = mockRecentScans[idx];
+  if (scan.result === "found") {
+    const item = MOCK_ITEMS.find((i) => i.clave === scan.clave || i.barcode === scan.barcode);
+    if (item) {
+      item.found_quantity = Math.max(0, item.found_quantity - 1);
+      item.missing_quantity = Math.max(item.expected_quantity - item.found_quantity, 0);
+      item.excess_quantity = Math.max(item.found_quantity - item.expected_quantity, 0);
+      item.reconciliation_percent =
+        item.expected_quantity > 0
+          ? Math.round((item.found_quantity / item.expected_quantity) * 10000) / 100
+          : 0;
+    }
+  }
+
+  mockRecentScans.splice(idx, 1);
+  return { ok: true };
+}
+
 export function isDevMode() {
   return (
     process.env.BIBLIOSCAN_DEV_MODE === "true" ||
@@ -84,7 +119,18 @@ export function mockProcessScan(barcode: string): ScanProcessResult {
   );
 
   if (!item) {
-    return { result: "not_found", message: "Activo no registrado (demo)" };
+    const notFound: ScanProcessResult = { result: "not_found", message: "Activo no registrado (demo)" };
+    mockRecentScans.unshift({
+      id: `mock-${++mockScanSeq}`,
+      barcode: key,
+      result: "not_found",
+      scanned_at: new Date().toISOString(),
+      description: null,
+      clave: null,
+      expected_quantity: null,
+      found_quantity: null,
+    });
+    return notFound;
   }
 
   item.found_quantity += 1;
@@ -95,7 +141,7 @@ export function mockProcessScan(barcode: string): ScanProcessResult {
       ? Math.round((item.found_quantity / item.expected_quantity) * 10000) / 100
       : 0;
 
-  return {
+  const result: ScanProcessResult = {
     result: "found",
     item: {
       id: item.id,
@@ -110,4 +156,17 @@ export function mockProcessScan(barcode: string): ScanProcessResult {
       excess_quantity: item.excess_quantity,
     },
   };
+
+  mockRecentScans.unshift({
+    id: `mock-${++mockScanSeq}`,
+    barcode: item.barcode,
+    result: "found" as ScanResult,
+    scanned_at: new Date().toISOString(),
+    description: item.description,
+    clave: item.clave,
+    expected_quantity: item.expected_quantity,
+    found_quantity: item.found_quantity,
+  });
+
+  return result;
 }

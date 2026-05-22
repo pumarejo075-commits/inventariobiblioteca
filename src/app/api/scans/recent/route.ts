@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getRecentScans } from "@/lib/db/queries";
 import { INVENTORY_SESSION_ID } from "@/lib/inventory/constants";
-import { isDevMode } from "@/lib/dev/mock-data";
+import { isDevMode, getMockRecentScans } from "@/lib/dev/mock-data";
 
 export async function GET() {
   if (isDevMode()) {
-    return NextResponse.json([]);
+    return NextResponse.json(getMockRecentScans(25));
   }
 
   try {
