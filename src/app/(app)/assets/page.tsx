@@ -16,7 +16,7 @@ const FILTERS: { id: StatusFilter; label: string }[] = [
 ];
 
 const FILTER_BASE =
-  "w-full rounded-lg px-1.5 py-2.5 text-center text-[7px] font-semibold uppercase leading-tight tracking-normal sm:text-[8px]";
+  "w-full rounded-xl px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide";
 
 function filterButtonClass(id: StatusFilter, active: boolean): string {
   if (!active) {
@@ -66,7 +66,7 @@ export default function AssetsPage() {
           onChange={(e) => setQ(e.target.value)}
         />
 
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-2 gap-2">
           {FILTERS.map(({ id, label }) => (
             <button
               key={id}
