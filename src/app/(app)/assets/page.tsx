@@ -15,19 +15,22 @@ const FILTERS: { id: StatusFilter; label: string }[] = [
   { id: "excess", label: "Excedidos" },
 ];
 
+const FILTER_BASE =
+  "w-full rounded-lg px-1.5 py-2.5 text-center text-[7px] font-semibold uppercase leading-tight tracking-normal sm:text-[8px]";
+
 function filterButtonClass(id: StatusFilter, active: boolean): string {
   if (!active) {
-    return "min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-slate-400";
+    return `${FILTER_BASE} border border-slate-700 bg-slate-900 text-slate-400`;
   }
   switch (id) {
     case "complete":
-      return "min-w-0 flex-1 rounded-lg bg-emerald-500 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-slate-950";
+      return `${FILTER_BASE} bg-emerald-500 text-slate-950`;
     case "incomplete":
-      return "min-w-0 flex-1 rounded-lg bg-red-500 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-white";
+      return `${FILTER_BASE} bg-red-500 text-white`;
     case "excess":
-      return "min-w-0 flex-1 rounded-lg bg-blue-500 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-white";
+      return `${FILTER_BASE} bg-blue-500 text-white`;
     default:
-      return "min-w-0 flex-1 rounded-lg bg-slate-600 px-1 py-2 text-[10px] font-semibold uppercase tracking-tight text-white";
+      return `${FILTER_BASE} bg-slate-600 text-white`;
   }
 }
 
@@ -63,7 +66,7 @@ export default function AssetsPage() {
           onChange={(e) => setQ(e.target.value)}
         />
 
-        <div className="flex gap-1.5">
+        <div className="grid grid-cols-4 gap-1">
           {FILTERS.map(({ id, label }) => (
             <button
               key={id}
